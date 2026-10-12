@@ -1,0 +1,267 @@
+.appointment-chatbot-container {
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+    z-index: 9999;
+    font-family: Arial, sans-serif;
+}
+
+/* ================= CHAT WINDOW ================= */
+
+.chatbot-window {
+    width: 360px;
+    height: 500px;
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ================= HEADER ================= */
+
+.chatbot-header {
+    height: 70px;
+    background: #1976d2;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+}
+
+.assistant-info {
+    display: flex;
+    align-items: center;
+}
+
+.assistant-avatar {
+    width: 42px;
+    height: 42px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 23px;
+    margin-right: 10px;
+}
+
+.assistant-name {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.assistant-status {
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.chatbot-close-button {
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 21px;
+    cursor: pointer;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+}
+
+.chatbot-close-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ================= CHAT BODY ================= */
+
+.chatbot-body {
+    flex: 1;
+    background: #f4f6f8;
+    overflow-y: auto;
+}
+
+.chat-content {
+    padding: 15px;
+}
+
+.bot-message {
+    background: white;
+    padding: 10px 12px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 13px;
+    line-height: 1.5;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ================= INPUT ================= */
+
+.chat-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.chat-input:focus {
+    border-color: #1976d2;
+}
+
+.chat-textarea {
+    min-height: 75px;
+    resize: none;
+}
+
+/* ================= BUTTONS ================= */
+
+.chat-option-button,
+.chat-send-button {
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    padding: 11px;
+    background: #1976d2;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+.chat-option-button:hover,
+.chat-send-button:hover {
+    background: #125aa0;
+}
+
+/* ================= DATE ================= */
+
+.date-section {
+    margin-top: 10px;
+}
+
+.date-section label {
+    display: block;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* ================= SLOTS ================= */
+
+.slot-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.slot-button {
+    background: white;
+    border: 1px solid #1976d2;
+    color: #1976d2;
+    padding: 8px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.slot-button:hover {
+    background: #1976d2;
+    color: white;
+}
+
+.slot-button.selected {
+    background: #1976d2;
+    color: white;
+}
+
+/* ================= SUMMARY ================= */
+
+.appointment-summary {
+    background: white;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.appointment-summary p {
+    margin: 6px 0;
+}
+
+/* ================= NO SLOTS ================= */
+
+.no-slots {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    color: #d32f2f;
+    font-size: 13px;
+}
+
+/* ================= SUCCESS ================= */
+
+.success-content {
+    text-align: center;
+    padding-top: 35px;
+}
+
+.success-icon {
+    font-size: 50px;
+    margin-bottom: 10px;
+}
+
+.success-message {
+    color: #2e7d32;
+}
+
+/* ================= FLOATING BUTTON ================= */
+
+.chatbot-floating-button {
+    position: fixed;
+    right: 30px;
+    bottom: 25px;
+    width: 58px;
+    height: 58px;
+    border: none;
+    border-radius: 50%;
+    background: #1976d2;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 9999;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.chatbot-floating-button:hover {
+    transform: scale(1.08);
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 500px) {
+
+    .appointment-chatbot-container {
+        right: 10px;
+        bottom: 10px;
+        left: 10px;
+    }
+
+    .chatbot-window {
+        width: 100%;
+        height: 500px;
+    }
+
+    .chatbot-floating-button {
+        right: 20px;
+        bottom: 20px;
+    }
+}

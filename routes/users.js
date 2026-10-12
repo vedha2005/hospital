@@ -1,78 +1,240 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const users = express.Router();
-
 
 const db = require('../utils/db');
 
-process.env.SECRET_KEY = 'Arijit';
+const router = express.Router();
 
-users.post('/register', (req, res) => {
+const SECRET_KEY = 'Arijit';
 
-    const userData = {
-        first_name  : req.body.first_name,
-        last_name   : req.body.last_name,
-        email       : req.body.email,
-        password    : req.body.password
+/*
+    USER REGISTER
+    POST /users/register
+*/
+router.post('/register', async (req, res) => {
+    try {
+        const {
+            first_name,
+            last_name,
+            email,
+            phone_no,
+            password,
+            address
+        } = req.body;
+
+        if (!first_name || !last_name || !email || !password) {
+            return res.status(400).json({
+                message: 'Please provide all required fields'
+            });
+        }
+
+        const checkQuery = `
+            SELECT *
+            FROM users
+            WHERE email = ?
+        `;
+
+        db.query(checkQuery, [email], async (err, results) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({
+                    message: 'Database error'
+                });
+            }
+
+            if (results.length > 0) {
+                return res.status(409).json({
+                    message: 'User already exists'
+                });
+            }
+
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            const insertQuery = `
+                INSERT INTO users
+                (first_name, last_name, email, phone_no, password, address)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `;
+
+            db.query(
+                insertQuery,
+                [
+                    first_name,
+                    last_name,
+                    email,
+                    phone_no,
+                    hashedPassword,
+                    address
+                ],
+                (err, result) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            message: 'Failed to register user'
+                        });
+                    }
+
+                    res.status(201).json({
+                        message: 'User registered successfully',
+                        user_id: result.insertId
+                    });
+                }
+            );
+        });
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: 'Server error'
+        });
+    }
+});
+
+
+/*
+    USER LOGIN
+    POST /users/login
+*/
+router.post('/login', (req, res) => {
+    const {
+        email,
+        password
+    } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({
+            message: 'Email and password are required'
+        });
     }
 
-    let find = `SELECT * FROM users WHERE email = "${userData.email}"`;
+    const query = `
+        SELECT *
+        FROM users
+        WHERE email = ?
+    `;
 
-    db.query(find, (err1, result1) => {
-        if(err1) console.log(err1);
-        console.log(result1[0]);
+    db.query(query, [email], async (err, results) => {
+        if (err) {
+            console.error(err);
 
-        if(result1[0] == undefined) {
-            bcrypt.hash(req.body.password, 10, (err, hash) => {
-                userData.password = hash;
-                
-                let create = `INSERT INTO users (firstname, lastname, email, password)
-                              VALUES ( "${userData.first_name}", 
-                                       "${userData.last_name}", 
-                                       "${userData.email}",
-                                       "${userData.password}")`;
-
-                db.query(create, (err2, result2) => {
-                    if(err2) console.log(err2);
-                    res.send("Created Database ooooooooooooohhhhhh");
-                })
+            return res.status(500).json({
+                message: 'Database error'
             });
-        }else {
-            res.send("user already exist...");
         }
-    });
-});
 
-users.get('/login', (req, res) => {
-    let find = `SELECT password, user_id FROM users WHERE email = "${req.body.email}"`;
-    
-    db.query(find, (err, result) => {
-        if(err) console.log(err);
-        console.log(result);
+        if (results.length === 0) {
+            return res.status(401).json({
+                message: 'Invalid email or password'
+            });
+        }
 
-        if(result[0] != undefined) {
-            if(bcrypt.compareSync(req.body.password, result[0].password)) {
-                let token = jwt.sign(result[0].user_id, process.env.SECRET_KEY);
-                res.send(token);
-            } else {
-                res.send('Password incorrect');
+        const user = results[0];
+
+        let passwordValid = false;
+
+        try {
+            passwordValid = await bcrypt.compare(
+                password,
+                user.password
+            );
+        } catch (error) {
+            passwordValid = false;
+        }
+
+        // Support old plain-text passwords if any exist
+        if (!passwordValid && password === user.password) {
+            passwordValid = true;
+        }
+
+        if (!passwordValid) {
+            return res.status(401).json({
+                message: 'Invalid email or password'
+            });
+        }
+
+        const token = jwt.sign(
+            {
+                id: String(user.user_id),
+                email: user.email
+            },
+            SECRET_KEY,
+            {
+                expiresIn: '1d'
             }
-        } else {
-            res.send("Email not found");
-        }
+        );
+
+        res.json({
+            message: 'Login successful',
+            token: token,
+            user: {
+                user_id: user.user_id,
+                first_name: user.first_name,
+                last_name: user.last_name,
+                email: user.email
+            }
+        });
     });
 });
 
-users.get('/profile', (req, res) => {
-    let user_id = jwt.verify(req.headers['authorization'], process.env.SECRET_KEY);
-    
-    let user = `SELECT * FROM users WHERE user_id = ${user_id}`;
-    db.query(user, (err, result) => {
-        if (err) console.log(err);
-        res.send(result);
-    });
+
+/*
+    USER PROFILE
+    GET /users/profile
+*/
+router.get('/profile', (req, res) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({
+            message: 'Authorization token required'
+        });
+    }
+
+    const token = authHeader.startsWith('Bearer ')
+        ? authHeader.substring(7)
+        : authHeader;
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+
+        const userId = decoded.id;
+
+        const query = `
+            SELECT
+                user_id,
+                first_name,
+                last_name,
+                email,
+                phone_no,
+                address
+            FROM users
+            WHERE user_id = ?
+        `;
+
+        db.query(query, [userId], (err, results) => {
+            if (err) {
+                console.error(err);
+
+                return res.status(500).json({
+                    message: 'Database error'
+                });
+            }
+
+            if (results.length === 0) {
+                return res.status(404).json({
+                    message: 'User not found'
+                });
+            }
+
+            res.json(results[0]);
+        });
+    } catch (error) {
+        return res.status(401).json({
+            message: 'Invalid or expired token'
+        });
+    }
 });
 
 
-module.exports = users;
+module.exports = router;
